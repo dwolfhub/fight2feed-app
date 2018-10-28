@@ -1,4 +1,5 @@
 import 'package:fight2feed/util/api.dart';
+import 'package:fight2feed/widgets/alert.dart';
 import 'package:fight2feed/widgets/card.dart';
 import 'package:fight2feed/widgets/submit-button.dart';
 import 'package:fight2feed/widgets/title.dart';
@@ -68,6 +69,7 @@ class _RequestInvitePageState extends State<RequestInvitePage> {
   void _onSubmit() async {
     if (_requestInviteFormKey.currentState.validate()) {
       _requestInviteFormKey.currentState.save();
+
       setState(() {
         _isLoading = true;
       });
@@ -79,15 +81,20 @@ class _RequestInvitePageState extends State<RequestInvitePage> {
           'name': formData.name,
           'phoneNumber': formData.phoneNumber,
         });
-        if (res.statusCode == 201) {
-          _onSuccess();
-        } else if (res.statusCode == 400) {
-          _onBadRequest();
-        } else if (res.statusCode == 500) {
-          _onServerError();
+
+        switch (res.statusCode) {
+          case 201:
+            _onSuccess();
+            break;
+          case 400:
+            _onBadRequest();
+            break;
+          case 500:
+            serverError(context);
+            break;
         }
       } on Exception {
-        _onNetworkError();
+        networkError(context);
       } finally {
         setState(() {
           _isLoading = false;
@@ -102,49 +109,10 @@ class _RequestInvitePageState extends State<RequestInvitePage> {
 
   void _onBadRequest() {
     // todo parse response and show error
-    _dialog(
+    f2fShowAlert(
+      context,
       'Bad Request',
       'Please check your information and try again.',
-    );
-  }
-
-  void _onNetworkError() {
-    _dialog(
-      'Connection Error',
-      'Unable to connect to the server. Please check your network connection and try again.',
-    );
-  }
-
-  void _onServerError() {
-    _dialog(
-      'Server Error',
-      'A server error has occurred. We are aware of the problem and will be fixing it as soon as possible. Thanks for your patience.',
-    );
-  }
-
-  Future<Null> _dialog(String title, String message) {
-    return showDialog<Null>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(message),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            FlatButton(
-              child: Text('OK'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 
