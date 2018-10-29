@@ -1,7 +1,8 @@
 import "package:http/http.dart";
 import 'dart:convert';
 
-const BASE_URL = 'http://localhost:8080';
+const BASE_URL = 'http://192.241.131.74:49179';
+// const BASE_URL = 'http://localhost:8080';
 
 String token;
 

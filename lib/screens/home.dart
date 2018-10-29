@@ -20,7 +20,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: new Text("Home"),
+        title: new Text("Donations"),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.person),
