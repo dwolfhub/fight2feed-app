@@ -3,6 +3,7 @@ import 'dart:convert';
 
 const BASE_URL = 'http://192.241.131.74:49179';
 // const BASE_URL = 'http://localhost:8080';
+const API_REFRESH_TOKEN_STORAGE_KEY = 'API_REFRESH_TOKEN';
 
 String token;
 

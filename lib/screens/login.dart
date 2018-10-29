@@ -10,6 +10,7 @@ import 'package:fight2feed/widgets/submit-button.dart';
 import 'package:fight2feed/widgets/title.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:http/http.dart';
 
@@ -29,6 +30,7 @@ class _LoginPageState extends State<LoginPage> {
   final loginFormKey = new GlobalKey<FormState>();
   _LoginData _loginFormData = new _LoginData();
   bool _isLoading = false;
+  final storage = new FlutterSecureStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -39,20 +41,53 @@ class _LoginPageState extends State<LoginPage> {
       ),
       body: Builder(
         builder: (BuildContext context) {
-          return new Container(
-            // decoration: new BoxDecoration(
-            //   image: new DecorationImage(
-            //     image: new AssetImage("assets/preparing-food.jpg"),
-            //     fit: BoxFit.cover,
-            //   ),
-            // ),
-            child: new ListView(
-              padding: EdgeInsets.all(24.0),
-              children: <Widget>[
-                _header(),
-                _loginCard(context),
-              ],
-            ),
+          return FutureBuilder<String>(
+            future: storage.read(key: API_REFRESH_TOKEN_STORAGE_KEY),
+            builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+              if (snapshot.hasData) {
+                if (snapshot.data != '') {
+                  apiPost(
+                    '/api/token/refresh',
+                    {"refresh_token": snapshot.data},
+                  ).then((Response res) {
+                    if (res.statusCode == 200) {
+                      Map<String, dynamic> resData = json.decode(res.body);
+                      setToken(resData['token']);
+
+                      storage.write(
+                        key: API_REFRESH_TOKEN_STORAGE_KEY,
+                        value: resData['refresh_token'],
+                      );
+
+                      goHome();
+                    }
+                  });
+                }
+              } else if (snapshot.connectionState == ConnectionState.done) {
+                return new Container(
+                  // decoration: new BoxDecoration(
+                  //   image: new DecorationImage(
+                  //     image: new AssetImage("assets/preparing-food.jpg"),
+                  //     fit: BoxFit.cover,
+                  //   ),
+                  // ),
+                  child: new ListView(
+                    padding: EdgeInsets.all(24.0),
+                    children: <Widget>[
+                      _header(),
+                      _loginCard(context),
+                    ],
+                  ),
+                );
+              }
+
+              return Container(
+                alignment: AlignmentDirectional.center,
+                child: CircularProgressIndicator(
+                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
+                ),
+              );
+            },
           );
         },
       ),
@@ -140,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
               }),
         );
 
-        if (result)
+        if (result != null)
           Scaffold.of(context).showSnackBar(SnackBar(content: Text("$result")));
       },
     );
@@ -167,24 +202,16 @@ class _LoginPageState extends State<LoginPage> {
             if (!(data['token'] is String) || data['token'].length == 0)
               serverError(context);
 
+            if (data['refresh_token'] is String) {
+              await storage.write(
+                key: API_REFRESH_TOKEN_STORAGE_KEY,
+                value: data['refresh_token'],
+              );
+            }
+
             setToken(data['token']);
 
-            Navigator.pushReplacement(
-              context,
-              new PageRouteBuilder(
-                  transitionDuration: Duration(milliseconds: 250),
-                  pageBuilder: (BuildContext context, _, __) => new HomePage(),
-                  transitionsBuilder:
-                      (_, Animation<double> animation, __, Widget child) {
-                    return new SlideTransition(
-                      child: child,
-                      position: new Tween<Offset>(
-                        begin: const Offset(1.0, 0.0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                    );
-                  }),
-            );
+            goHome();
 
             break;
           case 401:
@@ -206,6 +233,25 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     }
+  }
+
+  void goHome() {
+    Navigator.pushReplacement(
+      context,
+      new PageRouteBuilder(
+          transitionDuration: Duration(milliseconds: 250),
+          pageBuilder: (BuildContext context, _, __) => new HomePage(),
+          transitionsBuilder:
+              (_, Animation<double> animation, __, Widget child) {
+            return new SlideTransition(
+              child: child,
+              position: new Tween<Offset>(
+                begin: const Offset(1.0, 0.0),
+                end: Offset.zero,
+              ).animate(animation),
+            );
+          }),
+    );
   }
 
   Widget _prompt(String question, String answer, onTap) {

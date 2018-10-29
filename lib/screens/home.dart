@@ -33,7 +33,8 @@ class _HomePageState extends State<HomePage> {
       ),
       body: FutureBuilder<List<Donation>>(
         future: getDonations(),
-        builder: (context, snapshot) {
+        builder:
+            (BuildContext context, AsyncSnapshot<List<Donation>> snapshot) {
           if (snapshot.hasData) {
             return ListView(
               children: snapshot.data
