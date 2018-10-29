@@ -1,3 +1,4 @@
+import 'package:fight2feed/models/media.dart';
 import "package:http/http.dart";
 import 'dart:convert';
 
@@ -35,4 +36,12 @@ Future<Response> apiGet(String uri) {
 
 void setToken(String _token) {
   token = _token;
+}
+
+String getMediaUrl(Media media) {
+  return BASE_URL +
+      '/media/' +
+      media.contentUrl.substring(0, 2) +
+      '/' +
+      media.contentUrl;
 }

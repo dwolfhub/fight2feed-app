@@ -63,28 +63,28 @@ class _LoginPageState extends State<LoginPage> {
                     }
                   });
                 }
-              } else if (snapshot.connectionState == ConnectionState.done) {
-                return new Container(
-                  // decoration: new BoxDecoration(
-                  //   image: new DecorationImage(
-                  //     image: new AssetImage("assets/preparing-food.jpg"),
-                  //     fit: BoxFit.cover,
-                  //   ),
-                  // ),
-                  child: new ListView(
-                    padding: EdgeInsets.all(24.0),
-                    children: <Widget>[
-                      _header(),
-                      _loginCard(context),
-                    ],
+              } else if (snapshot.connectionState == ConnectionState.waiting) {
+                return Container(
+                  alignment: AlignmentDirectional.center,
+                  child: CircularProgressIndicator(
+                    valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
                   ),
                 );
               }
 
-              return Container(
-                alignment: AlignmentDirectional.center,
-                child: CircularProgressIndicator(
-                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
+              return new Container(
+                // decoration: new BoxDecoration(
+                //   image: new DecorationImage(
+                //     image: new AssetImage("assets/preparing-food.jpg"),
+                //     fit: BoxFit.cover,
+                //   ),
+                // ),
+                child: new ListView(
+                  padding: EdgeInsets.all(24.0),
+                  children: <Widget>[
+                    _header(),
+                    _loginCard(context),
+                  ],
                 ),
               );
             },
