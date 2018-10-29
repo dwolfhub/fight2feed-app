@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:fight2feed/screens/home.dart';
 import 'package:fight2feed/screens/request-invite.dart';
 import 'package:fight2feed/util/api.dart';
 import 'package:fight2feed/widgets/alert.dart';
@@ -152,19 +155,37 @@ class _LoginPageState extends State<LoginPage> {
       });
 
       try {
-        Response res = await apiPost('/api/login_check', {
+        Response res = await apiPost('/api/login', {
           'username': this._loginFormData.email,
           'password': this._loginFormData.password,
         });
 
         switch (res.statusCode) {
           case 200:
-          // todo save token and redirect to home page
-            f2fShowAlert(
+            Map<String, dynamic> data = json.decode(res.body);
+
+            if (!(data['token'] is String) || data['token'].length == 0)
+              serverError(context);
+
+            setToken(data['token']);
+
+            Navigator.pushReplacement(
               context,
-              'Good Job!',
-              'Those were correct.',
+              new PageRouteBuilder(
+                  transitionDuration: Duration(milliseconds: 250),
+                  pageBuilder: (BuildContext context, _, __) => new HomePage(),
+                  transitionsBuilder:
+                      (_, Animation<double> animation, __, Widget child) {
+                    return new SlideTransition(
+                      child: child,
+                      position: new Tween<Offset>(
+                        begin: const Offset(1.0, 0.0),
+                        end: Offset.zero,
+                      ).animate(animation),
+                    );
+                  }),
             );
+
             break;
           case 401:
             f2fShowAlert(
@@ -173,7 +194,7 @@ class _LoginPageState extends State<LoginPage> {
               'Please check your information and try again',
             );
             break;
-          case 500:
+          default:
             serverError(context);
             break;
         }
