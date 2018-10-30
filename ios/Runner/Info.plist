@@ -41,5 +41,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>To submit photos of your donation.</string>
+    <key>NSCameraUsageDescription</key>
+    <string>To submit photos of your donation.</string>
 </dict>
 </plist>

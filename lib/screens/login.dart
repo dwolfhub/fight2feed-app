@@ -1,8 +1,9 @@
 import 'dart:convert';
 
-import 'package:fight2feed/screens/home.dart';
+import 'package:fight2feed/screens/donations.dart';
 import 'package:fight2feed/screens/request-invite.dart';
 import 'package:fight2feed/util/api.dart';
+import 'package:fight2feed/util/transition.dart';
 import 'package:fight2feed/widgets/alert.dart';
 import 'package:fight2feed/widgets/card-prompt.dart';
 import 'package:fight2feed/widgets/card.dart';
@@ -44,7 +45,8 @@ class _LoginPageState extends State<LoginPage> {
           return FutureBuilder<String>(
             future: storage.read(key: API_REFRESH_TOKEN_STORAGE_KEY),
             builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-              if (snapshot.hasData) {
+              if (snapshot.connectionState == ConnectionState.done &&
+                  snapshot.hasData) {
                 if (snapshot.data != '') {
                   apiPost(
                     '/api/token/refresh',
@@ -137,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         new F2FSubmitButton(
           iconData: Icons.verified_user,
-          text: 'LOGIN',
+          text: 'LOG IN',
           isLoading: _isLoading,
           onPressed: this._onLoginPressed,
         ),
@@ -159,20 +161,7 @@ class _LoginPageState extends State<LoginPage> {
       "Request Invitation",
       () async {
         final result = await Navigator.of(this.context).push(
-          new PageRouteBuilder(
-              transitionDuration: Duration(milliseconds: 250),
-              pageBuilder: (BuildContext context, _, __) =>
-                  new RequestInvitePage(),
-              transitionsBuilder:
-                  (_, Animation<double> animation, __, Widget child) {
-                return new SlideTransition(
-                  child: child,
-                  position: new Tween<Offset>(
-                    begin: const Offset(1.0, 0.0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                );
-              }),
+          pageRouteBuilderTo(new RequestInvitePage()),
         );
 
         if (result != null)
@@ -238,50 +227,12 @@ class _LoginPageState extends State<LoginPage> {
   void goHome() {
     Navigator.pushReplacement(
       context,
-      new PageRouteBuilder(
-          transitionDuration: Duration(milliseconds: 250),
-          pageBuilder: (BuildContext context, _, __) => new HomePage(),
-          transitionsBuilder:
-              (_, Animation<double> animation, __, Widget child) {
-            return new SlideTransition(
-              child: child,
-              position: new Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(animation),
-            );
-          }),
+      pageRouteBuilderTo(new DonationsPage()),
     );
   }
 
   Widget _prompt(String question, String answer, onTap) {
     return new F2FCardPrompt(
         context: context, question: question, answer: answer, onTap: onTap);
-  }
-
-  Future<Null> _showLoginError() async {
-    return showDialog<Null>(
-      context: context,
-      builder: (BuildContext context) {
-        return new AlertDialog(
-          title: new Text('Invalid Credentials'),
-          content: new SingleChildScrollView(
-            child: new Text(
-              'Plese verify your email and password and try again.',
-            ),
-          ),
-          actions: <Widget>[
-            new RaisedButton(
-                child: new Text(
-                  'OK',
-                  style: Theme.of(context).textTheme.button,
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                }),
-          ],
-        );
-      },
-    );
   }
 }

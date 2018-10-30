@@ -29,7 +29,7 @@ Future<Null> f2fShowAlert(BuildContext context, String title, String message) {
 void networkError(context) {
   f2fShowAlert(
     context,
-    'Connection Error',
+    'Connection Error!!!',
     'Unable to connect to the server. Please check your network connection and try again.',
   );
 }
