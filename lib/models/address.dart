@@ -1,28 +1,28 @@
 class Address {
   int id;
-  String line1;
-  String line2;
-  String city;
-  String state;
-  String zip;
+  String streetAddress;
+  String addressLocality;
+  String addressRegion;
+  String postalCode;
+  String addressCountry;
 
   Address({
     this.id,
-    this.line1,
-    this.line2,
-    this.city,
-    this.state,
-    this.zip,
+    this.streetAddress,
+    this.addressLocality,
+    this.addressRegion,
+    this.postalCode,
+    this.addressCountry,
   });
 
   factory Address.fromJson(Map<String, dynamic> json) {
     return Address(
       id: json['id'],
-      line1: json['line1'],
-      line2: json['line2'],
-      city: json['city'],
-      state: json['state'],
-      zip: json['zip'],
+      streetAddress: json['streetAddress'],
+      addressLocality: json['addressLocality'],
+      addressRegion: json['addressRegion'],
+      postalCode: json['postalCode'],
+      addressCountry: json['addressCountry'],
     );
   }
 }

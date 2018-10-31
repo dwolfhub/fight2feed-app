@@ -92,9 +92,9 @@ class _DonationsPageState extends State<DonationsPage> {
                               ),
                               title: Text(donation.title),
                               subtitle: Text(
-                                donation.address.city +
+                                donation.address.addressLocality +
                                     ', ' +
-                                    donation.address.state,
+                                    donation.address.addressRegion,
                               ),
                             ),
                       )

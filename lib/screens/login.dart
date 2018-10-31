@@ -8,11 +8,10 @@ import 'package:fight2feed/widgets/alert.dart';
 import 'package:fight2feed/widgets/card-prompt.dart';
 import 'package:fight2feed/widgets/card.dart';
 import 'package:fight2feed/widgets/submit-button.dart';
+import 'package:fight2feed/widgets/text-field.dart';
 import 'package:fight2feed/widgets/title.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import 'package:http/http.dart';
 
 class LoginPage extends StatefulWidget {
@@ -23,8 +22,16 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginData {
-  String email;
+  String username;
   String password;
+
+  void setUsername(val) {
+    username = val;
+  }
+
+  void setPassword(val) {
+    password = val;
+  }
 }
 
 class _LoginPageState extends State<LoginPage> {
@@ -40,60 +47,84 @@ class _LoginPageState extends State<LoginPage> {
         title: new Text("Fight2Feed"),
         elevation: 1.0,
       ),
-      body: Builder(
-        builder: (BuildContext context) {
-          return FutureBuilder<String>(
-            future: storage.read(key: API_REFRESH_TOKEN_STORAGE_KEY),
-            builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
-              if (snapshot.connectionState == ConnectionState.done &&
-                  snapshot.hasData) {
-                if (snapshot.data != '') {
-                  apiPost(
-                    '/api/token/refresh',
-                    {"refresh_token": snapshot.data},
-                  ).then((Response res) {
-                    if (res.statusCode == 200) {
-                      Map<String, dynamic> resData = json.decode(res.body);
-                      setToken(resData['token']);
+      body: _builder(),
+    );
+  }
 
-                      storage.write(
-                        key: API_REFRESH_TOKEN_STORAGE_KEY,
-                        value: resData['refresh_token'],
-                      );
+  Builder _builder() {
+    return Builder(
+      builder: (BuildContext context) {
+        return FutureBuilder<String>(
+          future: storage.read(key: API_REFRESH_TOKEN_STORAGE_KEY),
+          builder: (BuildContext context, AsyncSnapshot<String> snapshot) {
+            if (_snapshotHasData(snapshot) && false) {
+              _handleRefreshToken(snapshot);
+            } else if (_snapshotIsLoading(snapshot) && false) {
+              return _loadingRefreshToken();
+            }
 
-                      goHome();
-                    }
-                  });
-                }
-              } else if (snapshot.connectionState == ConnectionState.waiting) {
-                return Container(
-                  alignment: AlignmentDirectional.center,
-                  child: CircularProgressIndicator(
-                    valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
-                  ),
-                );
-              }
+            return _noRefreshToken(context);
+          },
+        );
+      },
+    );
+  }
 
-              return new Container(
-                // decoration: new BoxDecoration(
-                //   image: new DecorationImage(
-                //     image: new AssetImage("assets/preparing-food.jpg"),
-                //     fit: BoxFit.cover,
-                //   ),
-                // ),
-                child: new ListView(
-                  padding: EdgeInsets.all(24.0),
-                  children: <Widget>[
-                    _header(),
-                    _loginCard(context),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+  bool _snapshotIsLoading(AsyncSnapshot<String> snapshot) =>
+      snapshot.connectionState == ConnectionState.waiting;
+
+  bool _snapshotHasData(AsyncSnapshot<String> snapshot) {
+    return snapshot.connectionState == ConnectionState.done && snapshot.hasData;
+  }
+
+  Container _noRefreshToken(BuildContext context) {
+    return new Container(
+      // decoration: new BoxDecoration(
+      //   image: new DecorationImage(
+      //     image: new AssetImage("assets/preparing-food.jpg"),
+      //     fit: BoxFit.cover,
+      //   ),
+      // ),
+      child: new ListView(
+        padding: EdgeInsets.all(24.0),
+        children: <Widget>[
+          _header(),
+          _loginCard(context),
+        ],
       ),
     );
+  }
+
+  Container _loadingRefreshToken() {
+    return Container(
+      alignment: AlignmentDirectional.center,
+      child: CircularProgressIndicator(
+        valueColor: new AlwaysStoppedAnimation<Color>(Colors.red),
+      ),
+    );
+  }
+
+  void _handleRefreshToken(AsyncSnapshot<String> snapshot) {
+    if (snapshot.data != '') {
+      apiPost(
+        '/api/token/refresh',
+        {
+          "refresh_token": snapshot.data,
+        },
+      ).then((Response res) {
+        if (res.statusCode == 200) {
+          Map<String, dynamic> resData = json.decode(res.body);
+          setToken(resData['token']);
+
+          storage.write(
+            key: API_REFRESH_TOKEN_STORAGE_KEY,
+            value: resData['refresh_token'],
+          );
+
+          goHome();
+        }
+      });
+    }
   }
 
   Widget _header() {
@@ -107,51 +138,59 @@ class _LoginPageState extends State<LoginPage> {
           key: loginFormKey,
           child: Column(
             children: <Widget>[
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Login',
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (val) {
-                  if (val.length == 0)
-                    return 'Please enter your username or email.';
-                  if (val.length > 255)
-                    return 'This field is limited to 255 characters.';
-                },
-                onSaved: (val) {
-                  this._loginFormData.email = val.trim();
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                ),
-                obscureText: true,
-                validator: (val) {
-                  return (val.trim() == '') ? 'Please enter a password.' : null;
-                },
-                onSaved: (val) {
-                  this._loginFormData.password = val.trim();
-                },
-              ),
+              _loginFormField(),
+              _passwordFormField(),
             ],
           ),
         ),
-        new F2FSubmitButton(
-          iconData: Icons.verified_user,
-          text: 'LOG IN',
-          isLoading: _isLoading,
-          onPressed: this._onLoginPressed,
-        ),
-        _prompt(
-          "Forgot your login info?",
-          "Reset Password",
-          () {
-            // todo
-          },
-        ),
+        _submitButton(),
+        _forgotPasswordPrompt(context),
         _requestInvitePrompt(context),
       ],
+    );
+  }
+
+  Widget _forgotPasswordPrompt(BuildContext context) {
+    return _prompt(
+      "Forgot your login info?",
+      "Reset Password",
+      () {
+        // todo
+      },
+    );
+  }
+
+  F2FSubmitButton _submitButton() {
+    return new F2FSubmitButton(
+      iconData: Icons.verified_user,
+      text: 'LOG IN',
+      isLoading: _isLoading,
+      onPressed: this._onLoginPressed,
+    );
+  }
+
+  F2FTextFormField _passwordFormField() {
+    return F2FTextFormField(
+      labelText: 'Password',
+      obscureText: true,
+      setter: this._loginFormData.setPassword,
+      validator: (val) {
+        return (val.trim() == '') ? 'Please enter a password.' : null;
+      },
+    );
+  }
+
+  F2FTextFormField _loginFormField() {
+    return new F2FTextFormField(
+      labelText: 'Login',
+      keyboardType: TextInputType.emailAddress,
+      setter: this._loginFormData.setUsername,
+      validator: (val) {
+        val = val.trim();
+
+        if (val.length == 0) return 'Please enter your username or email.';
+        if (val.length > 255) return 'This field is limited to 255 characters.';
+      },
     );
   }
 
@@ -180,9 +219,11 @@ class _LoginPageState extends State<LoginPage> {
 
       try {
         Response res = await apiPost('/api/login', {
-          'username': this._loginFormData.email,
+          'username': this._loginFormData.username,
           'password': this._loginFormData.password,
         });
+
+        print(res.statusCode);
 
         switch (res.statusCode) {
           case 200:

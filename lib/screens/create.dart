@@ -4,8 +4,9 @@ import 'package:fight2feed/widgets/card.dart';
 import 'package:fight2feed/widgets/submit-button.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/intl.dart';
+
+const DATE_DISPLAY_FORMAT = 'M/d/y @ h:mm a';
 
 class CreatePage extends StatefulWidget {
   CreatePage({Key key}) : super(key: key);
@@ -85,7 +86,7 @@ class _CreatePageState extends State<CreatePage> {
 
   Widget _expirationField() {
     TextEditingController textEditingController = new TextEditingController();
-    textEditingController.text = new DateFormat('M/d/y @ h:mm a').format(
+    textEditingController.text = new DateFormat(DATE_DISPLAY_FORMAT).format(
       new DateTime.now().add(
         new Duration(
           hours: 12,
@@ -103,12 +104,7 @@ class _CreatePageState extends State<CreatePage> {
             decoration: InputDecoration(
               labelText: 'Expiration',
             ),
-            validator: (val) {
-              if (val.length == 0) return 'When does this donation expire?';
-            },
-            onSaved: (val) {
-              // todo
-            },
+            onSaved: (val) {},
           ),
         ),
         IconButton(
@@ -128,10 +124,14 @@ class _CreatePageState extends State<CreatePage> {
               ),
             );
 
+            if (dateTime == null) return;
+
             TimeOfDay time = await showTimePicker(
               context: context,
               initialTime: TimeOfDay.now(),
             );
+
+            if (time == null) return;
 
             DateTime combinedDateTime = new DateTime(
               dateTime.year,
@@ -143,7 +143,7 @@ class _CreatePageState extends State<CreatePage> {
             );
 
             textEditingController.text =
-                DateFormat('M/d/y @ h:mm a').format(combinedDateTime);
+                DateFormat(DATE_DISPLAY_FORMAT).format(combinedDateTime);
           },
           icon: Icon(
             Icons.date_range,
