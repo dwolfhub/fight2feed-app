@@ -1,5 +1,6 @@
 import 'package:fight2feed/models/donation.dart';
 import 'package:fight2feed/util/api.dart';
+import 'package:fight2feed/widgets/submit-button.dart';
 import 'package:flutter/material.dart';
 
 class DonationPage extends StatefulWidget {
@@ -32,13 +33,52 @@ class _DonationPageState extends State<DonationPage> {
             ),
             height: 256.0,
           ),
-          Text(
-            this.donation.title,
-            style: Theme.of(context).textTheme.title,
+          Padding(
+            padding: const EdgeInsets.only(
+              top: 24.0,
+              bottom: 12.0,
+            ),
+            child: Text(
+              this.donation.title,
+              style: Theme.of(context).textTheme.title,
+            ),
           ),
           Text(
             this.donation.description,
             style: Theme.of(context).textTheme.body1,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              top: 24.0,
+              bottom: 6.0,
+            ),
+            child: Text(
+              'Location',
+              style: Theme.of(context).textTheme.title.copyWith(
+                    fontSize: 16.0,
+                  ),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(donation.address.streetAddress),
+              Text(
+                donation.address.addressLocality +
+                    ', ' +
+                    donation.address.addressRegion +
+                    ' ' +
+                    donation.address.postalCode,
+              ),
+            ],
+          ),
+          F2FSubmitButton(
+            iconData: Icons.message,
+            isLoading: false, // todo
+            onPressed: () {
+              // todo
+            },
+            text: 'Contact Donator',
           )
         ],
       ),

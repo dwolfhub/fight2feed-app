@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
   F2FSubmitButton _submitButton() {
     return new F2FSubmitButton(
       iconData: Icons.verified_user,
-      text: 'LOG IN',
+      text: 'Log In',
       isLoading: _isLoading,
       onPressed: this._onLoginPressed,
     );
@@ -222,8 +222,6 @@ class _LoginPageState extends State<LoginPage> {
           'username': this._loginFormData.username,
           'password': this._loginFormData.password,
         });
-
-        print(res.statusCode);
 
         switch (res.statusCode) {
           case 200:
